@@ -31,10 +31,14 @@ components:
       in: cookie
       name: JSESSIONID
   schemas:
-    ArrayOfProducts:
-      type: array
-      items:
-        $ref: '#/components/schemas/Product'
+    Category:
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Clothing
     Product:
       properties:
         id:
@@ -52,18 +56,48 @@ components:
         details:
           type: string
           example: A warm pair of socks.
-    ArrayOfCategories:
-      type: array
-      items:
-        $ref: '#/components/schemas/Category'
-    Category:
+    Role:
       properties:
         id:
           type: integer
           example: 1
-        name:
+        typ:
           type: string
-          example: Clothing
+          example: admin
+        level:
+          type: integer
+          example: 1
+    User:
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: jdoe
+        firstname:
+          type: string
+          example: John
+        lastname:
+          type: string
+          example: Doe
+        password:
+          type: string
+          example: superSecretPassword12345
+        role:
+          $ref: '#/components/schemas/Role'
+    ArrayOfCategories:
+      type: array
+      items:
+        $ref: '#/components/schemas/Category'
+    ArrayOfProducts:
+      type: array
+      items:
+        $ref: '#/components/schemas/Product'
+    ArrayOfRoles:
+      type: array
+      items:
+        $ref: '#/components/schemas/Role'
 paths:
   /product:
     get:
@@ -94,8 +128,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Product'
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: A warm pair of socks
       responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
         405:
           description: "Invalid input"
       security:
@@ -177,7 +230,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/ArrayOfCategories'
         5XX:
-          description: Unexpected error.
+          description: Unexpected error
+    post:
+      tags:
+      - "category"
+      summary: Add a new category to the store
+      description: ""
+      operationId: addCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Clothing
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+      security:
+      - cookieAuth: []
+  /category/{id}:
+    delete:
+      tags:
+      - "category"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the category to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
   /user:
     post:
       tags:
@@ -185,7 +283,35 @@ paths:
       summary: "Create user"
       description: "This can only be done by the logged in user."
       operationId: "createUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: 
+                  type: string
+                  example: jdoe
+                firstname:
+                  type: string
+                  example: John
+                lastname:
+                  type: string
+                  example: Doe
+                password:
+                  type: string
+                  example: superSecretPassword12345
+                roleLevel:
+                  type: integer
+                  example: 1
       responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
         default:
           description: "successful operation"
 externalDocs:
