@@ -1,11 +1,12 @@
 openapi: 3.0.0
 info:
-  title: "WebShop"
+  title: "BestWebShop.tech"
   description: "This document describes the API for the refactored Web Shop in the distributed systems laboratory."
   version: 1.0.0-beta
-  termsOfService: "-"
+  termsOfService: "http://bestwebshop.tech/terms"
   contact:
     email: "info@bestwebshop.tech"
+    url: http://bestwebshop.tech/support
   license:
     name: "Apache 2.0"
     url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -51,6 +52,18 @@ components:
         details:
           type: string
           example: A warm pair of socks.
+    ArrayOfCategories:
+      type: array
+      items:
+        $ref: '#/components/schemas/Category'
+    Category:
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Clothing
 paths:
   /product:
     get:
@@ -115,6 +128,8 @@ paths:
             type: integer
           required: true
           description: Numeric ID of the product to get
+      security:
+      - cookieAuth: []
       responses:
         200:
           description: A Product object
@@ -122,6 +137,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+    delete:
+      tags:
+      - "product"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the product to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        202: 
+          description: Accepted
+        204:
+          description: No Content
+  /category:
+    get:
+      tags:
+        - "category"
+      summary: "Get all available categories of the shop"
+      description: Returns a list of products.
+      operationId: "getAllCategories"
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: A JSON array of Category objects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfCategories'
+        5XX:
+          description: Unexpected error.
   /user:
     post:
       tags:
