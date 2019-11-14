@@ -16,14 +16,32 @@ servers:
 tags:
 - name: "product"
   description: "Everything about the products of the shop"
+- name: "product/{id}"
+  description: "Everything that works on a certain product"
 - name: "category"
   description: "Administrate the categories of products"
+- name: "category/{id}"
+  description: "Everything that works on a certain category"
 - name: "user"
-  description: "Operations about user"
-- name: "role"
-  description: "Find out about the user roles"
+  description: "Operations about users"
+- name: "user/{id}"
+  description: "Everything that works on a certain user"
+#- name: "role"
+#  description: "Find out about the user roles"
+- name: "role/{id}"
+  description: "Everything that works on a certain role"
 - name: "auth"
-  description: "Authentication and stuff"
+  description: "Manage sessionIDs"
+- name: "auth/{id}"
+  description: "Manage sessionIDs"
+- name: "product_withpermission"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
+- name: "product_withpermission/{id}"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
+- name: "category_withpermission"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
+- name: "category_withpermission/{id}"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
 components:
   securitySchemes:
     cookieAuth:         # arbitrary name for the security scheme; will be used in the "security" key later
@@ -84,8 +102,9 @@ components:
         password:
           type: string
           example: superSecretPassword12345
-        role:
-          $ref: '#/components/schemas/Role'
+        roleId:
+          type: integer
+          example: 2
     ArrayOfCategories:
       type: array
       items:
@@ -94,10 +113,10 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Product'
-    ArrayOfRoles:
-      type: array
-      items:
-        $ref: '#/components/schemas/Role'
+    #ArrayOfRoles:
+    #  type: array
+    #  items:
+    #    $ref: '#/components/schemas/Role'
 paths:
   /product:
     get:
@@ -159,21 +178,47 @@ paths:
       summary: "Update an existing product"
       description: ""
       operationId: "updateProduct"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: 
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: "A warm pair of socks"
       responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
         400:
           description: "Invalid ID supplied"
         404:
-          description: "Pet not found"
+          description: "Product not found"
         405:
           description: "Validation exception"
       security:
-      - petstore_auth:
-        - "write:pets"
-        - "read:pets"
+      - cookieAuth: []
   /product/{id}:
     get:
       tags:
-      - "product"
+      - "product/{id}"
       parameters:
         - in: path
           name: id
@@ -190,9 +235,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+        404:
+          description: Not Found
     delete:
       tags:
-      - "product"
+      - "product/{id}"
       parameters:
         - in: path
           name: id
@@ -259,7 +306,7 @@ paths:
   /category/{id}:
     delete:
       tags:
-      - "category"
+      - "category/{id}"
       parameters:
         - in: path
           name: id
@@ -314,6 +361,253 @@ paths:
                 $ref: '#/components/schemas/User'
         default:
           description: "successful operation"
-externalDocs:
-  description: "Find out more about Swagger"
-  url: "http://swagger.io"
+  /user/{id}:
+    get:
+      tags:
+      - "user/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to get
+      summary: "Get details about a user"
+      description: Returns a user object.
+      security: 
+        - cookieAuth: []
+      responses:
+        200:
+          description: A User object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: Not Found
+  /role/{id}:
+    get:
+      tags:
+      - "role/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the role to get
+      summary: "Get details about a role"
+      description: Returns a Role object
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: A Role object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        404: 
+          description: Not Found
+  /auth:
+    post:
+      tags:
+      - "auth"
+      summary: "Get a new session ID"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: jdoe
+                password:
+                  type: string
+                  example: superSecretPassword12345
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId: 
+                    type: string
+                    example: "1234ilidfnei592"
+        404:
+          description: User not found
+  /auth/{id}:
+    delete:
+      tags:
+        - "auth/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric User-ID of the User that is logging out.
+      summary: "Delete session during logout."
+      description: ""
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+        500: 
+          description: Internal Server Error
+  /product_withpermission:
+    post:
+      tags:
+      - "product_withpermission"
+      summary: "Add a new product to the store"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: A warm pair of socks
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        405:
+          description: "Invalid input"
+      security:
+      - cookieAuth: []
+    put:
+      tags:
+      - "product_withpermission"
+      summary: "Update an existing product"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: 
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: "A warm pair of socks"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Product not found"
+        405:
+          description: "Validation exception"
+      security:
+      - cookieAuth: []
+  /product_withpermission/{id}:
+    delete:
+      tags:
+      - "product_withpermission/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the product to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        202: 
+          description: Accepted
+        204:
+          description: No Content
+  /category_withpermission:
+     post:
+      tags:
+      - "category_withpermission"
+      summary: Add a new category to the store
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Clothing
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+      security:
+      - cookieAuth: []
+  /category_withpermission/{id}:
+    delete:
+      tags:
+      - "category_withpermission/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the category to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+#externalDocs:
+#  description: "Find out more about Swagger"
+#  url: "http://swagger.io"
