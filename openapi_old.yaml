@@ -14,10 +14,6 @@ servers:
   - url: http://api.bestwebshop.tech/v1
     description: Development server
 tags:
-- name: "product-with-category"
-  description: "Composite service that connects a product with the associated category"
-- name: "product-with-category/{id}"
-  description: "Composite service that connects a product with the associated category"
 - name: "product"
   description: "Everything about the products of the shop"
 - name: "product/{id}"
@@ -30,6 +26,22 @@ tags:
   description: "Operations about users"
 - name: "user/{id}"
   description: "Everything that works on a certain user"
+#- name: "role"
+#  description: "Find out about the user roles"
+- name: "role/{id}"
+  description: "Everything that works on a certain role"
+- name: "auth"
+  description: "Manage sessionIDs"
+- name: "auth/{id}"
+  description: "Manage sessionIDs"
+- name: "product_withpermission"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
+- name: "product_withpermission/{id}"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
+- name: "category_withpermission"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
+- name: "category_withpermission/{id}"
+  description: "Internal Microservice - usage needs authentication beforehand. Should only be used by other microservices."
 components:
   securitySchemes:
     cookieAuth:         # arbitrary name for the security scheme; will be used in the "security" key later
@@ -56,28 +68,23 @@ components:
         price:
           type: number
           example: 3.45
+        category:
+          type: string
+          example: Clothing
         details:
           type: string
           example: A warm pair of socks.
-        categoryId:
-          type: integer
-          example: 1
-    ProductWithCategory:
+    Role:
       properties:
         id:
           type: integer
           example: 1
-        name:
+        typ:
           type: string
-          example: Socks
-        price:
-          type: number
-          example: 3.45
-        details:
-          type: string
-          example: A warm pair of socks.
-        category:
-          $ref: '#/components/schemas/Category'
+          example: admin
+        level:
+          type: integer
+          example: 1
     User:
       properties:
         id:
@@ -95,12 +102,9 @@ components:
         password:
           type: string
           example: superSecretPassword12345
-        role:
-          $ref: '#/components/schemas/Role'
-    ArrayOfProductsWithCategory:
-      type: array
-      items:
-        $ref: '#/components/schemas/ProductWithCategory'
+        roleId:
+          type: integer
+          example: 2
     ArrayOfCategories:
       type: array
       items:
@@ -109,168 +113,11 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Product'
+    #ArrayOfRoles:
+    #  type: array
+    #  items:
+    #    $ref: '#/components/schemas/Role'
 paths:
-  /product-with-category:
-    get:
-      tags:
-      - "product-with-category"
-      summary: "Get all available products of the shop"
-      description: Returns a list of products.
-      operationId: "getAll"
-      security:
-        - cookieAuth: []
-      parameters:
-        - in: query
-          name: q
-          schema:
-            type: string
-          required: false
-          description: String that should be in either name or details of a product.
-        - in: query
-          name: price[from]
-          schema:
-            type: number
-          required: false
-          description: Lower price bound to search products.
-        - in: query
-          name: price[to]
-          schema:
-            type: number
-          required: false
-          description: Upper price bound to search products.    
-      responses:
-        200:
-          description: A JSON array of products.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArrayOfProductsWithCategory'
-        5XX:
-          description: Unexpected error.
-    post:
-      tags:
-      - "product-with-category"
-      summary: "Add a new product to the store"
-      description: ""
-      operationId: "addProduct"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: Socks
-                price:
-                  type: number
-                  example: 3.45
-                categoryId:
-                  type: integer
-                  example: 1
-                details:
-                  type: string
-                  example: A warm pair of socks
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductWithCategory'
-        405:
-          description: "Invalid input"
-      security:
-      - cookieAuth: []
-    put:
-      tags:
-      - "product-with-category"
-      summary: "Update an existing product"
-      description: ""
-      operationId: "updateProduct"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id: 
-                  type: integer
-                  example: 1
-                name:
-                  type: string
-                  example: Socks
-                price:
-                  type: number
-                  example: 3.45
-                categoryId:
-                  type: integer
-                  example: 1
-                details:
-                  type: string
-                  example: "A warm pair of socks"
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductWithCategory'
-        400:
-          description: "Invalid ID supplied"
-        404:
-          description: "Product not found"
-        405:
-          description: "Validation exception"
-      security:
-      - cookieAuth: []
-  /product-with-category/{id}:
-    get:
-      tags:
-      - "product-with-category/{id}"
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the product to get
-      security:
-      - cookieAuth: []
-      responses:
-        200:
-          description: A Product object
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductWithCategory'
-        404:
-          description: Not Found
-    delete:
-      tags:
-      - "product-with-category/{id}"
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the product to delete
-      security:
-      - cookieAuth: []
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductWithCategory'
-        202: 
-          description: Accepted
-        204:
-          description: No Content
   /product:
     get:
       tags:
@@ -280,25 +127,6 @@ paths:
       operationId: "getAll"
       security:
         - cookieAuth: []
-      parameters:
-        - in: query
-          name: q
-          schema:
-            type: string
-          required: false
-          description: String that should be in either name or details of a product.
-        - in: query
-          name: price[from]
-          schema:
-            type: number
-          required: false
-          description: Lower price bound to search products.
-        - in: query
-          name: price[to]
-          schema:
-            type: number
-          required: false
-          description: Upper price bound to search products.    
       responses:
         200:
           description: A JSON array of products.
@@ -476,25 +304,6 @@ paths:
       security:
       - cookieAuth: []
   /category/{id}:
-    get:
-      tags:
-      - "category/{id}"
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the category to get
-      security:
-      - cookieAuth: []
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Category'
     delete:
       tags:
       - "category/{id}"
@@ -600,3 +409,205 @@ paths:
                 $ref: '#/components/schemas/Role'
         404: 
           description: Not Found
+  /auth:
+    post:
+      tags:
+      - "auth"
+      summary: "Get a new session ID"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: jdoe
+                password:
+                  type: string
+                  example: superSecretPassword12345
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId: 
+                    type: string
+                    example: "1234ilidfnei592"
+        404:
+          description: User not found
+  /auth/{id}:
+    delete:
+      tags:
+        - "auth/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric User-ID of the User that is logging out.
+      summary: "Delete session during logout."
+      description: ""
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+        500: 
+          description: Internal Server Error
+  /product_withpermission:
+    post:
+      tags:
+      - "product_withpermission"
+      summary: "Add a new product to the store"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: A warm pair of socks
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        405:
+          description: "Invalid input"
+      security:
+      - cookieAuth: []
+    put:
+      tags:
+      - "product_withpermission"
+      summary: "Update an existing product"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: 
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: "A warm pair of socks"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Product not found"
+        405:
+          description: "Validation exception"
+      security:
+      - cookieAuth: []
+  /product_withpermission/{id}:
+    delete:
+      tags:
+      - "product_withpermission/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the product to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        202: 
+          description: Accepted
+        204:
+          description: No Content
+  /category_withpermission:
+     post:
+      tags:
+      - "category_withpermission"
+      summary: Add a new category to the store
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Clothing
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+      security:
+      - cookieAuth: []
+  /category_withpermission/{id}:
+    delete:
+      tags:
+      - "category_withpermission/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the category to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+#externalDocs:
+#  description: "Find out more about Swagger"
+#  url: "http://swagger.io"
