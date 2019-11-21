@@ -97,6 +97,17 @@ components:
           example: superSecretPassword12345
         role:
           $ref: '#/components/schemas/Role'
+    Role:
+      properties:
+        id:
+          type: integer
+          example: 1
+        typ:
+          type: string
+          example: admin
+        level:
+          type: integer
+          example: 1
     ArrayOfProductsWithCategory:
       type: array
       items:
@@ -277,7 +288,6 @@ paths:
       - "product"
       summary: "Get all available products of the shop"
       description: Returns a list of products.
-      operationId: "getAll"
       security:
         - cookieAuth: []
       parameters:
@@ -313,7 +323,6 @@ paths:
       - "product"
       summary: "Add a new product to the store"
       description: ""
-      operationId: "addProduct"
       requestBody:
         required: true
         content:
@@ -349,7 +358,6 @@ paths:
       - "product"
       summary: "Update an existing product"
       description: ""
-      operationId: "updateProduct"
       requestBody:
         required: true
         content:
