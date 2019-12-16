@@ -9,8 +9,8 @@ import tech.bestwebshop.api.productservice.repositories.ProductRepository;
 import javax.validation.Valid;
 import java.util.List;
 
+
 @RestController
-@RequestMapping("/api")
 public class ProductController {
 
     @Autowired
