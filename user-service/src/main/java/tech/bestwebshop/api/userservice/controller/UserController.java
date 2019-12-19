@@ -11,6 +11,7 @@ import tech.bestwebshop.api.userservice.repository.UserRepository;
 
 import javax.validation.Valid;
 
+@CrossOrigin
 @RestController
 public class UserController {
 
