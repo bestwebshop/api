@@ -23,6 +23,13 @@ public class CategoryController {
         return categoryRepository.save(category);
     }
 
+    @GetMapping("/category/{id}")
+    public Category getCategoryById(@PathVariable(value = "id") Integer categoryId){
+        return categoryRepository.findById(categoryId).orElseThrow(
+                () -> new ResourceNotFoundException("Category", "id", categoryId)
+        );
+    }
+
     @DeleteMapping("/category/{id}")
     public Category deleteCategory(@PathVariable(value="id") Integer categoryId){
         Category categoryToDelete = categoryRepository.findById(categoryId).orElseThrow(
