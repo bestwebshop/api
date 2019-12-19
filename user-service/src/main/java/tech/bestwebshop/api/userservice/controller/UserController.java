@@ -11,7 +11,7 @@ import tech.bestwebshop.api.userservice.repository.UserRepository;
 
 import javax.validation.Valid;
 
-@CrossOrigin
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 public class UserController {
 
