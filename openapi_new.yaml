@@ -1,0 +1,661 @@
+openapi: 3.0.0
+info:
+  title: "BestWebShop.tech"
+  description: "This document describes the API for the refactored Web Shop in the distributed systems laboratory."
+  version: 1.0.0-beta
+  termsOfService: "http://bestwebshop.tech/terms"
+  contact:
+    email: "info@bestwebshop.tech"
+    url: http://bestwebshop.tech/support
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+servers:
+  - url: http://api.bestwebshop.tech/v1
+    description: Development server
+tags:
+- name: "Inventory Service"
+  description: "Composite service that connects a product with the associated category"
+- name: "Product Core Service"
+  description: (__Invisible to the outside__) Everything about the products of the shop
+- name: "Category Core Service"
+  description: (__Invisible to the outside__) Everything about the categories of products of the shop"
+- name: "User service"
+  description: "Operations on users"
+components:
+  securitySchemes:
+    cookieAuth:         # arbitrary name for the security scheme; will be used in the "security" key later
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+  schemas:
+    Category:
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Clothing
+    Product:
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Socks
+        price:
+          type: number
+          example: 3.45
+        details:
+          type: string
+          example: A warm pair of socks.
+        categoryId:
+          type: integer
+          example: 1
+    ProductWithCategory:
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Socks
+        price:
+          type: number
+          example: 3.45
+        details:
+          type: string
+          example: A warm pair of socks.
+        category:
+          $ref: '#/components/schemas/Category'
+    User:
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: jdoe
+        firstname:
+          type: string
+          example: John
+        lastname:
+          type: string
+          example: Doe
+        password:
+          type: string
+          example: superSecretPassword12345
+        role:
+          $ref: '#/components/schemas/Role'
+    Role:
+      properties:
+        id:
+          type: integer
+          example: 1
+        typ:
+          type: string
+          example: admin
+        level:
+          type: integer
+          example: 1
+    ArrayOfProductsWithCategory:
+      type: array
+      items:
+        $ref: '#/components/schemas/ProductWithCategory'
+    ArrayOfCategories:
+      type: array
+      items:
+        $ref: '#/components/schemas/Category'
+    ArrayOfProducts:
+      type: array
+      items:
+        $ref: '#/components/schemas/Product'
+paths:
+  /inventory-api/products:
+    get:
+      tags:
+      - "Inventory Service"
+      summary: "Get all available products of the shop"
+      description: Returns a list of products.
+      operationId: "getAll"
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: false
+          description: String that should be in either name or details of a product.
+        - in: query
+          name: minPrice
+          schema:
+            type: number
+          required: false
+          description: Lower price bound to search products.
+        - in: query
+          name: maxPrice
+          schema:
+            type: number
+          required: false
+          description: Upper price bound to search products.    
+      responses:
+        200:
+          description: A JSON array of products.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfProductsWithCategory'
+        5XX:
+          description: Unexpected error.
+    post:
+      tags:
+      - "Inventory Service"
+      summary: "Add a new product to the store"
+      description: ""
+      operationId: "addProduct"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                category:
+                  type: string
+                  example: socks
+                details:
+                  type: string
+                  example: A warm pair of socks
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductWithCategory'
+        405:
+          description: "Invalid input"
+      security:
+      - cookieAuth: []
+    put:
+      tags:
+      - "Inventory Service"
+      summary: "Update an existing product"
+      description: ""
+      operationId: "updateProduct"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: 
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: "A warm pair of socks"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductWithCategory'
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Product not found"
+        405:
+          description: "Validation exception"
+      security:
+      - cookieAuth: []
+  /inventory-api/products/{id}:
+    get:
+      tags:
+      - "Inventory Service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the product to get
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: A Product object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductWithCategory'
+        404:
+          description: Not Found
+    delete:
+      tags:
+      - "Inventory Service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the product to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductWithCategory'
+        202: 
+          description: Accepted
+        204:
+          description: No Content
+  /inventory-api/categories:
+    get:
+      tags:
+        - "Inventory Service"
+      summary: "Get all available categories of the shop"
+      description: Returns a list of products.
+      operationId: "getCategories"
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: A JSON array of Category objects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfCategories'
+        5XX:
+          description: Unexpected error
+    post:
+      tags:
+      - "Inventory Service"
+      summary: Add a new category to the store
+      description: ""
+      operationId: addCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Clothing
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+      security:
+      - cookieAuth: []
+  /inventory-api/categories/{id}:
+    get:
+      tags:
+      - "Inventory Service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the category to get
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+    delete:
+      tags:
+      - "Inventory Service"
+      summary: Delete the category and all associated products.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the category to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+  /products:
+    get:
+      tags:
+      - "Product Core Service"
+      summary: "Get all available products of the shop"
+      description: Returns a list of products.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          required: false
+          description: String that should be in either name or details of a product.
+        - in: query
+          name: price[from]
+          schema:
+            type: number
+          required: false
+          description: Lower price bound to search products.
+        - in: query
+          name: price[to]
+          schema:
+            type: number
+          required: false
+          description: Upper price bound to search products.    
+      responses:
+        200:
+          description: A JSON array of products.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfProducts'
+        5XX:
+          description: Unexpected error.
+    post:
+      tags:
+      - "Product Core Service"
+      summary: "Add a new product to the store"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: A warm pair of socks
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        405:
+          description: "Invalid input"
+      security:
+      - cookieAuth: []
+    put:
+      tags:
+      - "Product Core Service"
+      summary: "Update an existing product"
+      description: ""
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: 
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: Socks
+                price:
+                  type: number
+                  example: 3.45
+                categoryId:
+                  type: integer
+                  example: 1
+                details:
+                  type: string
+                  example: "A warm pair of socks"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Product not found"
+        405:
+          description: "Validation exception"
+      security:
+      - cookieAuth: []
+  /products/{id}:
+    get:
+      tags:
+      - "Product Core Service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the product to get
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: A Product object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        404:
+          description: Not Found
+    delete:
+      tags:
+      - "Product Core Service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the product to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        202: 
+          description: Accepted
+        204:
+          description: No Content
+  /categories:
+    get:
+      tags:
+        - "Category Core Service"
+      summary: "Get all available categories of the shop"
+      description: Returns a list of products.
+      operationId: "getAllCategories"
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: A JSON array of Category objects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfCategories'
+        5XX:
+          description: Unexpected error
+    post:
+      tags:
+      - "Category Core Service"
+      summary: Add a new category to the store
+      description: ""
+      operationId: newCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Clothing
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+      security:
+      - cookieAuth: []
+  /categories/{id}:
+    get:
+      tags:
+      - "Category Core Service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the category to get
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+    delete:
+      tags:
+      - "Category Core Service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the category to delete
+      security:
+      - cookieAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+  /user-api/users:
+    post:
+      tags:
+      - "User service"
+      summary: "Create user"
+      description: "This can only be done by the logged in user."
+      operationId: "createUser"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: 
+                  type: string
+                  example: jdoe
+                firstname:
+                  type: string
+                  example: John
+                lastname:
+                  type: string
+                  example: Doe
+                password:
+                  type: string
+                  example: superSecretPassword12345
+                roleLevel:
+                  type: integer
+                  example: 1
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          description: "successful operation"
+  /user-api/users/{id}:
+    get:
+      tags:
+      - "User service"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to get
+      summary: "Get details about a user"
+      description: Returns a user object.
+      security: 
+        - cookieAuth: []
+      responses:
+        200:
+          description: A User object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: Not Found
