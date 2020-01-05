@@ -14,14 +14,22 @@ servers:
   - url: http://api.bestwebshop.tech/v1
     description: Development server
 tags:
-- name: "Inventory Service"
+- name: "product-with-category"
   description: "Composite service that connects a product with the associated category"
-- name: "Product Core Service"
-  description: (__Invisible to the outside__) Everything about the products of the shop
-- name: "Category Core Service"
-  description: (__Invisible to the outside__) Everything about the categories of products of the shop"
-- name: "User service"
-  description: "Operations on users"
+- name: "product-with-category/{id}"
+  description: "Composite service that connects a product with the associated category"
+- name: "product"
+  description: "Everything about the products of the shop"
+- name: "product/{id}"
+  description: "Everything that works on a certain product"
+- name: "category"
+  description: "Administrate the categories of products"
+- name: "category/{id}"
+  description: "Everything that works on a certain category"
+- name: "user"
+  description: "Operations about users"
+- name: "user/{id}"
+  description: "Everything that works on a certain user"
 components:
   securitySchemes:
     cookieAuth:         # arbitrary name for the security scheme; will be used in the "security" key later
@@ -113,10 +121,10 @@ components:
       items:
         $ref: '#/components/schemas/Product'
 paths:
-  /inventory-api/products:
+  /product-with-category:
     get:
       tags:
-      - "Inventory Service"
+      - "product-with-category"
       summary: "Get all available products of the shop"
       description: Returns a list of products.
       operationId: "getAll"
@@ -124,19 +132,19 @@ paths:
         - cookieAuth: []
       parameters:
         - in: query
-          name: text
+          name: q
           schema:
             type: string
           required: false
           description: String that should be in either name or details of a product.
         - in: query
-          name: minPrice
+          name: price[from]
           schema:
             type: number
           required: false
           description: Lower price bound to search products.
         - in: query
-          name: maxPrice
+          name: price[to]
           schema:
             type: number
           required: false
@@ -152,7 +160,7 @@ paths:
           description: Unexpected error.
     post:
       tags:
-      - "Inventory Service"
+      - "product-with-category"
       summary: "Add a new product to the store"
       description: ""
       operationId: "addProduct"
@@ -169,9 +177,9 @@ paths:
                 price:
                   type: number
                   example: 3.45
-                category:
-                  type: string
-                  example: socks
+                categoryId:
+                  type: integer
+                  example: 1
                 details:
                   type: string
                   example: A warm pair of socks
@@ -188,7 +196,7 @@ paths:
       - cookieAuth: []
     put:
       tags:
-      - "Inventory Service"
+      - "product-with-category"
       summary: "Update an existing product"
       description: ""
       operationId: "updateProduct"
@@ -229,10 +237,10 @@ paths:
           description: "Validation exception"
       security:
       - cookieAuth: []
-  /inventory-api/products/{id}:
+  /product-with-category/{id}:
     get:
       tags:
-      - "Inventory Service"
+      - "product-with-category/{id}"
       parameters:
         - in: path
           name: id
@@ -253,7 +261,7 @@ paths:
           description: Not Found
     delete:
       tags:
-      - "Inventory Service"
+      - "product-with-category/{id}"
       parameters:
         - in: path
           name: id
@@ -274,93 +282,10 @@ paths:
           description: Accepted
         204:
           description: No Content
-  /inventory-api/categories:
+  /product:
     get:
       tags:
-        - "Inventory Service"
-      summary: "Get all available categories of the shop"
-      description: Returns a list of products.
-      operationId: "getCategories"
-      security:
-        - cookieAuth: []
-      responses:
-        200:
-          description: A JSON array of Category objects.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArrayOfCategories'
-        5XX:
-          description: Unexpected error
-    post:
-      tags:
-      - "Inventory Service"
-      summary: Add a new category to the store
-      description: ""
-      operationId: addCategory
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: Clothing
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Category'
-      security:
-      - cookieAuth: []
-  /inventory-api/categories/{id}:
-    get:
-      tags:
-      - "Inventory Service"
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the category to get
-      security:
-      - cookieAuth: []
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Category'
-    delete:
-      tags:
-      - "Inventory Service"
-      summary: Delete the category and all associated products.
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the category to delete
-      security:
-      - cookieAuth: []
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Category'
-  /products:
-    get:
-      tags:
-      - "Product Core Service"
+      - "product"
       summary: "Get all available products of the shop"
       description: Returns a list of products.
       security:
@@ -395,7 +320,7 @@ paths:
           description: Unexpected error.
     post:
       tags:
-      - "Product Core Service"
+      - "product"
       summary: "Add a new product to the store"
       description: ""
       requestBody:
@@ -430,7 +355,7 @@ paths:
       - cookieAuth: []
     put:
       tags:
-      - "Product Core Service"
+      - "product"
       summary: "Update an existing product"
       description: ""
       requestBody:
@@ -470,10 +395,10 @@ paths:
           description: "Validation exception"
       security:
       - cookieAuth: []
-  /products/{id}:
+  /product/{id}:
     get:
       tags:
-      - "Product Core Service"
+      - "product/{id}"
       parameters:
         - in: path
           name: id
@@ -494,7 +419,7 @@ paths:
           description: Not Found
     delete:
       tags:
-      - "Product Core Service"
+      - "product/{id}"
       parameters:
         - in: path
           name: id
@@ -515,10 +440,10 @@ paths:
           description: Accepted
         204:
           description: No Content
-  /categories:
+  /category:
     get:
       tags:
-        - "Category Core Service"
+        - "category"
       summary: "Get all available categories of the shop"
       description: Returns a list of products.
       operationId: "getAllCategories"
@@ -535,10 +460,10 @@ paths:
           description: Unexpected error
     post:
       tags:
-      - "Category Core Service"
+      - "category"
       summary: Add a new category to the store
       description: ""
-      operationId: newCategory
+      operationId: addCategory
       requestBody:
         required: true
         content:
@@ -558,10 +483,10 @@ paths:
                 $ref: '#/components/schemas/Category'
       security:
       - cookieAuth: []
-  /categories/{id}:
+  /category/{id}:
     get:
       tags:
-      - "Category Core Service"
+      - "category/{id}"
       parameters:
         - in: path
           name: id
@@ -580,7 +505,7 @@ paths:
                 $ref: '#/components/schemas/Category'
     delete:
       tags:
-      - "Category Core Service"
+      - "category/{id}"
       parameters:
         - in: path
           name: id
@@ -597,10 +522,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Category'
-  /user-api/users:
+  /user:
     post:
       tags:
-      - "User service"
+      - "user"
       summary: "Create user"
       description: "This can only be done by the logged in user."
       operationId: "createUser"
@@ -635,10 +560,10 @@ paths:
                 $ref: '#/components/schemas/User'
         default:
           description: "successful operation"
-  /user-api/users/{id}:
+  /user/{id}:
     get:
       tags:
-      - "User service"
+      - "user/{id}"
       parameters:
         - in: path
           name: id
@@ -658,4 +583,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
         404:
+          description: Not Found
+  /role/{id}:
+    get:
+      tags:
+      - "role/{id}"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the role to get
+      summary: "Get details about a role"
+      description: Returns a Role object
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: A Role object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        404: 
           description: Not Found
