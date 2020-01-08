@@ -627,14 +627,19 @@ paths:
                   type: integer
                   example: 1
       responses:
-        200:
-          description: OK
+        201:
+          description: Successfully created the user.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        default:
-          description: "successful operation"
+        400:
+          description: There was a problem. Contains a message if the username is already taken (see example).
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Username already taken.
   /user-api/users/{id}:
     get:
       tags:
