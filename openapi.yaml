@@ -659,3 +659,32 @@ paths:
                 $ref: '#/components/schemas/User'
         404:
           description: Not Found
+  /user-api/session:
+    post:
+      tags:
+      - "User service"
+      summary: Sign in as user
+      description: Checks for a given username and password, if the credentials match - otherwise, delivers an Error.
+      operationId: signIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                 type: string
+                 example: jdoe
+                password:
+                  type: string
+                  example: superSecretPassword12345
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: Something went wrong, either username is not found or the username/password pair does not match.
