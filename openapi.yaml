@@ -337,6 +337,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Category'
+    put:
+      tags:
+      - "Inventory Service"
+      summary: Update category
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric ID of the category to update
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        200:
+          description: Category has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
     delete:
       tags:
       - "Inventory Service"
